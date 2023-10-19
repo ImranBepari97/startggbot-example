@@ -1,0 +1,8 @@
+com:
+  imranbepari:
+    discord:
+      token: ${DISCORD_BOT_TOKEN}
+    app:
+      max-standings: 8
+      poll-time: 10000
+
