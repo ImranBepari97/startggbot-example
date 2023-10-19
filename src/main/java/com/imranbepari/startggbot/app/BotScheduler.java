@@ -71,12 +71,6 @@ public class BotScheduler {
                 //just set that as our standing list
                 List<Entrant> newStanding = newStandingResponse.getItems().getEntities().getEntrants();
 
-                //If all the final placements have been set, then we can remove this from the scheduling map
-                if (newStanding.stream().allMatch(entrant -> entrant.finalPlacement() != null)) {
-                    iterator.remove();
-                    return;
-                }
-
                 List<Entrant> oldStanding = botEventCache.getCachedStanding(currentInfo).orElse(Collections.emptyList());
 
                 if (oldStanding.equals(newStanding)) {
@@ -87,9 +81,19 @@ public class BotScheduler {
                 botEventCache.putCachedStanding(currentInfo, newStanding);
 
                 //Otherwise let's post an update to each channel subscribed to this!
-                kvp.getValue().forEach(channel -> {
+                kvp.getValue().parallelStream().forEach(channel -> {
                     sendStandingsUpdate(channel, currentInfo);
                 });
+
+                //If all the final placements have been set, then we can remove this from the scheduling map
+                if (newStanding.parallelStream().allMatch(entrant -> entrant.finalPlacement() != null)) {
+                    kvp.getValue().parallelStream().forEach(channel -> {
+                        channel.createMessage(String.format("Tournament %s event % has completed! You will no longer receive updates!",
+                                currentInfo.getTournamentSlug(), currentInfo.getEventSlug()));
+                    });
+                    iterator.remove();
+                    return;
+                }
 
             } catch (NoSuchElementException e) {
                 LOGGER.error("Scheduled update tried to GET a tournament/event that does not / no longer exists, removing from scheduler.");
