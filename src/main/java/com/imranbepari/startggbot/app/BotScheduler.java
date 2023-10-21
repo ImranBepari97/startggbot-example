@@ -75,6 +75,7 @@ public class BotScheduler {
 
                 if (oldStanding.equals(newStanding)) {
                     //The standings are the same, we don't need to update any channels
+                    LOGGER.trace("Standings for event info {}/{} unchanged, not sending update", currentInfo.getTournamentSlug(), currentInfo.getEventSlug());
                     return;
                 }
 
@@ -91,6 +92,7 @@ public class BotScheduler {
                         channel.createMessage(String.format("Tournament %s event % has completed! You will no longer receive updates!",
                                 currentInfo.getTournamentSlug(), currentInfo.getEventSlug()));
                     });
+                    LOGGER.info("Removing completed event info {}/{} from scheduler", currentInfo.getTournamentSlug(), currentInfo.getEventSlug());
                     iterator.remove();
                     return;
                 }
@@ -125,6 +127,7 @@ public class BotScheduler {
      * @param info The event to send the standings of.
      */
     public void sendStandingsUpdate(MessageChannel channel, EventInfo info) {
+        LOGGER.debug("Sending event info {}/{} update to channel with ID: {}", info.getTournamentSlug(), info.getEventSlug(), channel.getId());
         channel.getRestChannel().createMessage(generateUpdateMessageFrom(info)).subscribe();
     }
 
